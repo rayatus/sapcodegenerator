@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_FUGR" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <AREAT>DBFrameWork: Update Function - Template</AREAT>
+   <INCLUDES>
+    <SOBJ_NAME>SAPLZFG_TEMPLATE_UPDATE</SOBJ_NAME>
+   </INCLUDES>
+   <FUNCTIONS>
+    <item>
+     <FUNCNAME>ZFM_SFLIGHT_UPDATE_S</FUNCNAME>
+     <UPDATE_TASK>3</UPDATE_TASK>
+     <SHORT_TEXT>SFLIGHT - Update Function - Single</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IS_SFLIGHT</PARAMETER>
+       <TYP>SFLIGHT</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>ID_CHNGIND</PARAMETER>
+       <TYP>CDCHNGIND</TYP>
+      </RSIMP>
+     </IMPORT>
+     <EXCEPTION>
+      <RSEXC>
+       <EXCEPTION>DB_UPDATE_ERROR</EXCEPTION>
+      </RSEXC>
+      <RSEXC>
+       <EXCEPTION>INCORRECT_CHANGE_INDICATOR</EXCEPTION>
+      </RSEXC>
+     </EXCEPTION>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IS_SFLIGHT</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Flight</STEXT>
+       <INDEX> 001</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>ID_CHNGIND</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Change Type (U, I, S, D)</STEXT>
+       <INDEX> 002</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>DB_UPDATE_ERROR</PARAMETER>
+       <KIND>X</KIND>
+       <STEXT>Error during DB Update</STEXT>
+       <INDEX> 003</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>INCORRECT_CHANGE_INDICATOR</PARAMETER>
+       <KIND>X</KIND>
+       <STEXT>Incorrect change indicator</STEXT>
+       <INDEX> 004</INDEX>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+    <item>
+     <FUNCNAME>ZFM_SFLIGHT_UPDATE_T</FUNCNAME>
+     <UPDATE_TASK>3</UPDATE_TASK>
+     <SHORT_TEXT>SFLIGHT - Update Function Module - Massive</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IT_SFLIGHT</PARAMETER>
+       <TYP>ZTT_SFLIGHT_KZ</TYP>
+      </RSIMP>
+     </IMPORT>
+     <EXCEPTION>
+      <RSEXC>
+       <EXCEPTION>DB_UPDATE_ERROR</EXCEPTION>
+      </RSEXC>
+      <RSEXC>
+       <EXCEPTION>INCORRECT_CHANGE_INDICATOR</EXCEPTION>
+      </RSEXC>
+     </EXCEPTION>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IT_SFLIGHT</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>SFLIGHT - Update Table</STEXT>
+       <INDEX> 001</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>DB_UPDATE_ERROR</PARAMETER>
+       <KIND>X</KIND>
+       <STEXT>Error during DB Update</STEXT>
+       <INDEX> 002</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>INCORRECT_CHANGE_INDICATOR</PARAMETER>
+       <KIND>X</KIND>
+       <STEXT>Incorrect change indicator</STEXT>
+       <INDEX> 003</INDEX>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+   </FUNCTIONS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
