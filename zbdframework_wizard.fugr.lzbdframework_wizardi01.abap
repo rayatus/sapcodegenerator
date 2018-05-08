@@ -19,7 +19,7 @@
 */---------------------------------------------------------------------\
 *| For a full list of contributors visit:                              |
 *|                                                                     |
-*| project homepage: http://code.google.com/p/sapcodegenerator/        |
+*| project homepage: https://github.com/rayatus/sapcodegenerator       |
 *\---------------------------------------------------------------------/
 *----------------------------------------------------------------------*
 ***INCLUDE LZBDFRAMEWORK_WIZARDI01 .

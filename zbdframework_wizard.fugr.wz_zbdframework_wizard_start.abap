@@ -19,16 +19,16 @@
 */---------------------------------------------------------------------\
 *| For a full list of contributors visit:                              |
 *|                                                                     |
-*| project homepage: http://code.google.com/p/sapcodegenerator/        |
+*| project homepage: https://github.com/rayatus/sapcodegenerator        |
 *\---------------------------------------------------------------------/
 
 FUNCTION WZ_ZBDFRAMEWORK_WIZARD_START.
-*"--------------------------------------------------------------------
+*"----------------------------------------------------------------------
 *"*"Local Interface:
 *"  EXCEPTIONS
 *"      CANCELLED_BY_USER
 *"      ERROR
-*"--------------------------------------------------------------------
+*"----------------------------------------------------------------------
 *----------------- do not remove this include --------------------------
   INCLUDE <sbpt_wizard>.
 *----------------- do not remove this include --------------------------
