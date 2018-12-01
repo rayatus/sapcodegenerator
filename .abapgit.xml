@@ -11,6 +11,10 @@
     <item>/README.md</item>
     <item>/package.json</item>
     <item>/.travis.yml</item>
+    <item>/dtzbdframework_wizard_001.docv.xml</item>
+    <item>/dtzbdframework_wizard_002.docv.xml</item>
+    <item>/dtzbdframework_wizard_003.docv.xml</item>
+    <item>/dtzbdframework_wizard_007.docv.xml</item>
    </IGNORE>
   </DATA>
  </asx:values>
