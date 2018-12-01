@@ -30,8 +30,8 @@
 *&---------------------------------------------------------------------*
 FORM usr_initialize_wizard_data.
 *** initialize global wizard data
-  gs_codegen_data-prefix = 'ZRE_CL_'(008).
-  gs_codegen_data-suffix = '_READ'(009).
+  gs_codegen_data-prefix = zcl_zdbframework_engine_read=>get_class_prefix( ).
+  gs_codegen_data-suffix = zcl_zdbframework_engine_read=>get_class_suffix( ).
 ENDFORM.                    " USR_INITIALIZE_WIZARD_DATA
 *&---------------------------------------------------------------------*
 *&      FORM  USR_PROCESS_WIZARD_DATA
@@ -39,12 +39,27 @@ ENDFORM.                    " USR_INITIALIZE_WIZARD_DATA
 FORM usr_process_wizard_data.
 *** process global data collected by wizard
 
-  SUBMIT zdbframework
-    WITH p_clname  = gs_codegen_data-full_clsname
-    WITH p_dbname  = gs_codegen_data-tabname
-    WITH p_ttyp    = gs_codegen_data-getlist_struct_name
-    WITH p_devcls  = gs_codegen_data-devclass
-    AND RETURN.
+  DATA: ld_string    TYPE string,
+        ld_classname TYPE seoclsname.
+
+  zcl_zdbframework_engine_read=>generate_class(
+    EXPORTING
+      id_devclass         = gs_codegen_data-devclass
+      id_dbname           = gs_codegen_data-tabname
+      id_classname        = gs_codegen_data-full_clsname
+      id_ttyp             = gs_codegen_data-getlist_struct_name
+     IMPORTING
+       ed_classname        = ld_classname
+    EXCEPTIONS
+      OTHERS              = 999
+  ).
+  IF sy-subrc <> 0.
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ELSE.
+    CONCATENATE 'Class '  ld_classname  ' created successfullly' INTO ld_string SEPARATED BY space.
+    MESSAGE ld_string TYPE 'I'.
+  ENDIF.
 
 ENDFORM.                    " USR_PROCESS_WIZARD_DATA
 *&--------------------------------------------------------------*

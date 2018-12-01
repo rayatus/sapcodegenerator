@@ -60,6 +60,16 @@ FORM chk_tabname  USING    p_name.
     MESSAGE e007(e2) WITH p_name.
 *   & does not exist. Check name
   ENDIF.
+
+  "Is allowed to create a READ class for this table?
+  zcl_zdbframework_engine_read=>chk_is_dbname_permitted( EXPORTING id_dbname = p_name
+                                                         EXCEPTIONS OTHERS = 999 ).
+  IF NOT sy-subrc IS INITIAL.
+    MESSAGE ID      sy-msgid
+            TYPE    sy-msgty
+            NUMBER  sy-msgno
+            WITH    sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+  ENDIF.
 ENDFORM.                    " CHK_TYPEDATA
 *&---------------------------------------------------------------------*
 *&      Form  CHK_TYPEDATA
