@@ -501,7 +501,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     mac_add_source space.
     mac_add_source '  IF et_list IS INITIAL.'.
-    mac_add_source '    RAISE EXCEPTION TYPE cx_c2s_data_not_found.'.
+    mac_add_source '    RAISE EXCEPTION TYPE CX_NO_DATA_FOUND.'.
     mac_add_source '  ENDIF.'.
 
 
@@ -525,7 +525,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_exceptions ASSIGNING <ls_exception>.
     <ls_exception>-clsname  = <ls_method>-clsname.
     <ls_exception>-cmpname  = <ls_method>-cmpname.
-    <ls_exception>-sconame  = 'CX_C2S_DATA_NOT_FOUND'.
+    <ls_exception>-sconame  = 'CX_NO_DATA_FOUND'.
 *  <ls_exception>-version  = seoc_version_active.
     <ls_exception>-descript = 'Not Found'.
   ENDMETHOD.
@@ -556,7 +556,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     CONCATENATE '  DATA lt_list      TYPE' md_ttyp '.' INTO ld_string SEPARATED BY space.
     mac_add_source ld_string.
     mac_add_source '  DATA ls_list      LIKE LINE OF lt_list.'.
-    mac_add_source '  DATA lo_exception TYPE REF TO cx_c2s_data_not_found.'.
+    mac_add_source '  DATA lo_exception TYPE REF TO CX_NO_DATA_FOUND.'.
 
 
     mac_add_source space.
@@ -627,7 +627,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     mac_add_source '      MOVE-CORRESPONDING ls_list TO rs_result.'.
 
     mac_add_source space.
-    mac_add_source '      CATCH cx_c2s_data_not_found INTO lo_exception.'.
+    mac_add_source '      CATCH CX_NO_DATA_FOUND INTO lo_exception.'.
     mac_add_source '        RAISE EXCEPTION lo_exception.'.
     mac_add_source '    ENDTRY.'.
 
@@ -654,7 +654,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_exceptions ASSIGNING <ls_exception>.
     <ls_exception>-clsname  = <ls_method>-clsname.
     <ls_exception>-cmpname  = <ls_method>-cmpname.
-    <ls_exception>-sconame  = 'CX_C2S_DATA_NOT_FOUND'.
+    <ls_exception>-sconame  = 'CX_NO_DATA_FOUND'.
 *  <ls_exception>-version  = seoc_version_active.
     <ls_exception>-descript = 'Not data found'.
   ENDMETHOD.

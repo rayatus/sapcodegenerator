@@ -4,8 +4,6 @@
   <asx:values>
    <PROGDIR>
     <NAME>LZBDFRAMEWORK_WIZARDFWZ</NAME>
-    <STATE>A</STATE>
-    <VARCL>X</VARCL>
     <SUBC>I</SUBC>
     <RLOAD>D</RLOAD>
     <LDBNAME>D$S</LDBNAME>
