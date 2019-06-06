@@ -51,12 +51,12 @@ ENDFORM.                    " CHK_0200_DATA
 *      -->P_TYPEDATA  text
 *----------------------------------------------------------------------*
 FORM chk_tabname  USING    p_name.
-  DATA: ls_dd02l TYPE dd02l.
 
-  SELECT SINGLE * INTO ls_dd02l FROM dd02l
+
+  SELECT COUNT( * ) INTO sy-dbcnt FROM dd02l
     WHERE tabname = p_name
       AND as4local = 'A'.
-  IF NOT sy-subrc IS INITIAL.
+  IF sy-dbcnt IS INITIAL.
     MESSAGE e007(e2) WITH p_name.
 *   & does not exist. Check name
   ENDIF.
@@ -79,12 +79,11 @@ ENDFORM.                    " CHK_TYPEDATA
 *      -->P_GS_CODEGEN_DATA_GETLIST_STRUCT  text
 *----------------------------------------------------------------------*
 FORM chk_typedata  USING    p_name.
-  DATA: ls_dd40l TYPE dd40l.
 
-  SELECT SINGLE * INTO ls_dd40l FROM dd40l
+  SELECT COUNT( * ) INTO sy-dbcnt FROM dd40l
     WHERE typename = p_name
       AND as4local = 'A'.
-  IF NOT sy-subrc IS INITIAL.
+  IF sy-dbcnt IS INITIAL.
     MESSAGE e007(e2) WITH p_name.
 *   & does not exist. Check name
   ENDIF.

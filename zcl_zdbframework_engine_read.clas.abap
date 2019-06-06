@@ -153,6 +153,14 @@ CLASS zcl_zdbframework_engine_read DEFINITION
         VALUE(ed_korrnum)   TYPE trkorr
       EXCEPTIONS
         error.
+    "! <p class="shorttext synchronized" lang="en">Determines if table is a customizing table or not</p>
+    "!
+    "! @parameter rf_is_custo | <p class="shorttext synchronized" lang="en">Returns <em>abap_true</em> if is a customizing table.</p>
+    METHODS _is_custo
+      RETURNING
+        VALUE(rf_is_custo) TYPE abap_bool.
+
+
 
   PRIVATE SECTION.
 
@@ -176,6 +184,13 @@ CLASS zcl_zdbframework_engine_read DEFINITION
     CONSTANTS mc_class_prefix TYPE string VALUE 'ZCL_' ##NO_TEXT.
     CONSTANTS mc_class_suffix TYPE string VALUE '_READ' ##NO_TEXT.
     CONSTANTS mc_insert TYPE c LENGTH 6 VALUE 'INSERT' ##NO_TEXT.
+    CONSTANTS mc_procuder_namespace TYPE string VALUE 'P' ##NO_TEXT.
+    CONSTANTS mc_custom_namespace_z TYPE string VALUE 'Z' ##NO_TEXT.
+    CONSTANTS mc_custom_namespace_y TYPE string VALUE 'Y' ##NO_TEXT.
+    CONSTANTS mc_custom_namespace_t TYPE string VALUE 'T' ##NO_TEXT.
+    CONSTANTS mc_customizing_table TYPE string VALUE 'C' ##NO_TEXT.
+    CONSTANTS mc_active_version TYPE string VALUE 'A' ##NO_TEXT.
+
 
 
 
@@ -212,10 +227,15 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     lo_engine->_generate_class_header( ).
     lo_engine->_generate_types( ).
     lo_engine->_generate_method_add_range( ).
-    lo_engine->_generate_method_select_all( ).
+
+    IF lo_engine->_is_custo( ) = abap_true.
+      lo_engine->_generate_method_select_all( ).
+    ENDIF.
     lo_engine->_generate_method_get_list( ).
-    lo_engine->_generate_method_get_detail( ).
     lo_engine->_generate_method_init_buffer( ).
+
+    lo_engine->_generate_method_get_detail( ).
+
 
     lo_engine->_generate_class( IMPORTING ed_classname = ed_classname
                                           ed_korrnum   = ed_korrnum
@@ -231,9 +251,35 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD chk_is_dbname_permitted.
-*    IF id_dbname(1) <> 'Z' OR id_dbname(1) <> 'Y'.
-*      MESSAGE 'Only tables starting by Z or Y are allowed.'(020) TYPE mc_msgtyp-error RAISING dbname_not_permited.
-*    ENDIF.
+    DATA lt_allowed_namespaces TYPE STANDARD TABLE OF trnspace-namespace.
+    DATA lf_is_allowed TYPE abap_bool VALUE abap_false.
+    DATA long TYPE i.
+
+    FIELD-SYMBOLS <ls_allowed_namespace> LIKE LINE OF lt_allowed_namespaces.
+
+    "Search for producer namespaces.
+    SELECT namespace
+      FROM trnspace
+      INTO TABLE lt_allowed_namespaces
+      WHERE role = mc_procuder_namespace.
+
+    INSERT INITIAL LINE INTO TABLE lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
+    <ls_allowed_namespace> = mc_custom_namespace_z.
+    INSERT INITIAL LINE INTO TABLE lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
+    <ls_allowed_namespace> = mc_custom_namespace_y.
+    INSERT INITIAL LINE INTO TABLE lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
+    <ls_allowed_namespace> = mc_custom_namespace_t.
+
+    LOOP AT lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
+      long = strlen( <ls_allowed_namespace> ).
+      IF id_dbname+0(long) = <ls_allowed_namespace>.
+        lf_is_allowed = abap_true.
+      ENDIF.
+    ENDLOOP.
+
+    IF lf_is_allowed = abap_false AND sy-sysid <> 'NPL'.
+      MESSAGE 'Only tables in an allowed namespace are permitted.'(020) TYPE mc_msgtyp-error RAISING dbname_not_permited.
+    ENDIF.
   ENDMETHOD.
 
   METHOD get_class_prefix.
@@ -298,17 +344,18 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_attribute>-type       = md_ttyp.
     <ls_attribute>-typtype    = 1.
 
-    INSERT INITIAL LINE INTO TABLE mt_attributes ASSIGNING <ls_attribute>.
-    <ls_attribute>-clsname    = ms_class-clsname.
-    <ls_attribute>-cmpname    = 'MF_ALL_DATA_RETRIEVED' ##NO_TEXT.
-    <ls_attribute>-descript   = 'All data has been retrieved'(010).
-    <ls_attribute>-exposure   = seoc_exposure_private.
-    <ls_attribute>-state      = seoc_state_implemented.
-    <ls_attribute>-editorder  = 3.
-    <ls_attribute>-attdecltyp = seoo_attdecltyp_statics.
-    <ls_attribute>-type       = 'ABAP_BOOL' ##NO_TEXT.
-    <ls_attribute>-typtype    = 1.
-
+    IF _is_custo( ) = abap_true.
+      INSERT INITIAL LINE INTO TABLE mt_attributes ASSIGNING <ls_attribute>.
+      <ls_attribute>-clsname    = ms_class-clsname.
+      <ls_attribute>-cmpname    = 'MF_ALL_DATA_RETRIEVED' ##NO_TEXT.
+      <ls_attribute>-descript   = 'All data has been retrieved'(010).
+      <ls_attribute>-exposure   = seoc_exposure_private.
+      <ls_attribute>-state      = seoc_state_implemented.
+      <ls_attribute>-editorder  = 3.
+      <ls_attribute>-attdecltyp = seoo_attdecltyp_statics.
+      <ls_attribute>-type       = 'ABAP_BOOL' ##NO_TEXT.
+      <ls_attribute>-typtype    = 1.
+    ENDIF.
 
     LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist>.
       AT FIRST.
@@ -459,10 +506,14 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     mac_add_source space.
     mac_add_source '  FIELD-SYMBOLS: <ls_list> LIKE LINE OF et_list.' ##NO_TEXT.
     mac_add_source space.
-    mac_add_source space.
-    mac_add_source '  IF mf_all_data_retrieved = abap_false.' ##NO_TEXT.
-    mac_add_source '    _SELECT_ALL( ).' ##NO_TEXT.
-    mac_add_source '  ENDIF.' ##NO_TEXT.
+
+    IF _is_custo( ) = abap_true.
+      mac_add_source space.
+      mac_add_source '  IF mf_all_data_retrieved = abap_false.' ##NO_TEXT.
+      mac_add_source '    _SELECT_ALL( ).' ##NO_TEXT.
+      mac_add_source '  ENDIF.' ##NO_TEXT.
+    ENDIF.
+
     mac_add_source space.
     mac_add_source '  CLEAR ms_ranges.' ##NO_TEXT.
 
@@ -479,11 +530,12 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
       mac_add_source '  ENDIF.' ##NO_TEXT.
     ENDLOOP.
 
+    "First of all try to read buffered data from previous SELECt
     mac_add_source space.
     mac_add_source space.
     mac_add_source '  LOOP AT mt_buffer INTO ls_buffer' ##NO_TEXT.
 
-* Only key fields
+    " prepare Where for Loop with only key fields
     LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist>.
       ADD 1 TO ld_order.
 
@@ -520,6 +572,42 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     mac_add_source '  MOVE-CORRESPONDING ls_buffer to <ls_list>.' ##NO_TEXT.
     mac_add_source space.
     mac_add_source '  ENDLOOP.' ##NO_TEXT.
+
+
+    IF _is_custo( ) = abap_false.
+      "Now, if it's a customized table and nothing is stored in BUFFER lets try with a direc Select
+      mac_add_source space.
+      mac_add_source 'IF sy-subrc IS NOT INITIAL.' ##NO_TEXT.
+      mac_add_source space.
+      CONCATENATE    '  SELECT * FROM ' md_dbname INTO ld_string SEPARATED BY space RESPECTING BLANKS ##NO_TEXT.
+      mac_add_source ld_string.
+      mac_add_source '  APPENDING CORRESPONDING FIELDS OF TABLE et_list' ##NO_TEXT.
+
+* Only key fields
+      CLEAR ld_order.
+      LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist>.
+        ADD 1 TO ld_order.
+
+*   Build WHERE clause
+        CONCATENATE  'ms_ranges-' <ls_fieldlist>-fieldname INTO ld_string ##NO_TEXT.
+        IF ld_order = 1.
+          CONCATENATE '  WHERE' <ls_fieldlist>-fieldname 'IN' ld_string INTO ld_string SEPARATED BY space ##NO_TEXT.
+        ELSE.
+          CONCATENATE '    AND' <ls_fieldlist>-fieldname 'IN' ld_string INTO ld_string SEPARATED BY space ##NO_TEXT.
+        ENDIF.
+        mac_add_source ld_string.
+
+      ENDLOOP.
+
+      CONCATENATE <ld_source> '.' INTO <ld_source> ##NO_TEXT.
+      mac_add_source '    INSERT LINES OF et_list INTO TABLE mt_buffer.' ##NO_TEXT.
+      mac_add_source '    SORT mt_buffer.' ##NO_TEXT.
+      mac_add_source '    DELETE ADJACENT DUPLICATES FROM mt_buffer.' ##NO_TEXT.
+
+
+      mac_add_source 'ENDIF.' ##NO_TEXT.
+
+    ENDIF.
 
 
     mac_add_source space.
@@ -709,7 +797,9 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_method>-exposure  = seoc_exposure_public.
 
     mac_add_source '  CLEAR mt_buffer[].' ##NO_TEXT.
-    mac_add_source '  mf_all_data_retrieved = abap_false.' ##NO_TEXT.
+    IF _is_custo( ) = abap_true.
+      mac_add_source '  mf_all_data_retrieved = abap_false.' ##NO_TEXT.
+    ENDIF.
   ENDMETHOD.
 
   METHOD _generate_class.
@@ -794,4 +884,20 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
 
   ENDMETHOD.
+
+  METHOD _is_custo.
+    "Is a customizing table?
+    SELECT COUNT( * ) FROM dd02l
+      WHERE tabname = md_dbname
+        AND contflag = mc_customizing_table
+        AND actflag  = mc_active_version.
+    IF sy-subrc IS INITIAL.
+      rf_is_custo = abap_true.
+    ELSE.
+      rf_is_custo = abap_false.
+    ENDIF.
+  ENDMETHOD.
+
+
+
 ENDCLASS.

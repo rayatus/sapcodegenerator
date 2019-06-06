@@ -129,7 +129,7 @@
     <item>
      <ID>I</ID>
      <KEY>020</KEY>
-     <ENTRY>Only tables starting by Z or Y are allowed.</ENTRY>
+     <ENTRY>Only tables in an allowed namespace are permitted.</ENTRY>
      <LENGTH>86</LENGTH>
     </item>
     <item>
@@ -229,6 +229,12 @@
      <CMPNAME>_GET_FIELDLIST</CMPNAME>
      <LANGU>E</LANGU>
      <DESCRIPT>Retrieves DB fields</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ZDBFRAMEWORK_ENGINE_READ</CLSNAME>
+     <CMPNAME>_IS_CUSTO</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Determines if table is a customizing table or not</DESCRIPT>
     </SEOCOMPOTX>
    </DESCRIPTIONS>
   </asx:values>
