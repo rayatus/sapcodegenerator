@@ -156,6 +156,29 @@ CLASS zcl_zdbframework_engine_read DEFINITION
 
   PRIVATE SECTION.
 
+    CONSTANTS: BEGIN OF mc_msgtyp,
+                 error TYPE string VALUE 'E' ##NO_TEXT,
+               END OF mc_msgtyp.
+
+    CONSTANTS: BEGIN OF mc_fieldname,
+                 mandant TYPE string VALUE 'MANDT' ##NO_TEXT,
+                 client  TYPE string VALUE 'CLNT' ##NO_TEXT,
+               END OF mc_fieldname.
+
+    CONSTANTS: BEGIN OF mc_class_section,
+                 public    TYPE c LENGTH 4 VALUE 'CPUB' ##NO_TEXT,
+                 protected TYPE c LENGTH 4 VALUE 'CPRO'  ##NO_TEXT,
+                 private   TYPE c LENGTH 4 VALUE 'CPRI' ##NO_TEXT,
+                 all_class TYPE c LENGTH 5 VALUE 'CLASS' ##NO_TEXT,
+               END OF mc_class_section.
+
+    CONSTANTS mc_exception_not_found TYPE string VALUE 'CX_NO_DATA_FOUND' ##NO_TEXT.
+    CONSTANTS mc_class_prefix TYPE string VALUE 'ZCL_' ##NO_TEXT.
+    CONSTANTS mc_class_suffix TYPE string VALUE '_READ' ##NO_TEXT.
+    CONSTANTS mc_insert TYPE c LENGTH 6 VALUE 'INSERT' ##NO_TEXT.
+
+
+
 
 ENDCLASS.
 
@@ -209,15 +232,15 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
   METHOD chk_is_dbname_permitted.
 *    IF id_dbname(1) <> 'Z' OR id_dbname(1) <> 'Y'.
-*      MESSAGE 'Only tables starting by Z or Y are allowed.' TYPE 'E' RAISING dbname_not_permited.
+*      MESSAGE 'Only tables starting by Z or Y are allowed.'(020) TYPE mc_msgtyp-error RAISING dbname_not_permited.
 *    ENDIF.
   ENDMETHOD.
 
   METHOD get_class_prefix.
-    rd_prefix = 'ZCL_'.
+    rd_prefix = mc_class_prefix.
   ENDMETHOD.
   METHOD get_class_suffix.
-    rd_suffix = '_READ'.
+    rd_suffix = mc_class_suffix.
   ENDMETHOD.
 
   METHOD constructor.
@@ -232,13 +255,13 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     lo_structdescr ?= cl_abap_typedescr=>describe_by_name( md_dbname ).
     mt_fieldlist[] = lo_structdescr->get_ddic_field_list( ).
-    DELETE mt_fieldlist WHERE keyflag = abap_false OR fieldname = 'MANDT' OR datatype = 'CLNT'.
+    DELETE mt_fieldlist WHERE keyflag = abap_false OR fieldname = mc_fieldname-mandant OR datatype = mc_fieldname-client.
 
   ENDMETHOD.
 
   METHOD _generate_class_header.
 
-    CONCATENATE 'DB Framework for:' md_dbname INTO ms_class-descript SEPARATED BY space.
+    CONCATENATE TEXT-006 md_dbname INTO ms_class-descript SEPARATED BY space.
     ms_class-state   = seoc_state_implemented.
 
   ENDMETHOD.
@@ -255,19 +278,19 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     INSERT INITIAL LINE INTO TABLE mt_attributes ASSIGNING <ls_attribute>.
     <ls_attribute>-clsname    = ms_class-clsname.
-    <ls_attribute>-cmpname    = 'MS_RANGES'.
-    <ls_attribute>-descript   = 'Selection Ranges'.
+    <ls_attribute>-cmpname    = 'MS_RANGES' ##NO_TEXT.
+    <ls_attribute>-descript   = 'Selection Ranges'(012).
     <ls_attribute>-exposure   = seoc_exposure_private.
     <ls_attribute>-state      = seoc_state_implemented.
     <ls_attribute>-editorder  = 1.
     <ls_attribute>-attdecltyp = seoo_attdecltyp_statics.
-    <ls_attribute>-type       = 'MTYP_RANGES'.
+    <ls_attribute>-type       = 'MTYP_RANGES' ##NO_TEXT.
     <ls_attribute>-typtype    = 1.
 
     INSERT INITIAL LINE INTO TABLE mt_attributes ASSIGNING <ls_attribute>.
     <ls_attribute>-clsname    = ms_class-clsname.
-    <ls_attribute>-cmpname    = 'MT_BUFFER'.
-    <ls_attribute>-descript   = 'Data Buffer'.
+    <ls_attribute>-cmpname    = 'MT_BUFFER' ##NO_TEXT.
+    <ls_attribute>-descript   = 'Data Buffer'(011).
     <ls_attribute>-exposure   = seoc_exposure_private.
     <ls_attribute>-state      = seoc_state_implemented.
     <ls_attribute>-editorder  = 2.
@@ -277,13 +300,13 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     INSERT INITIAL LINE INTO TABLE mt_attributes ASSIGNING <ls_attribute>.
     <ls_attribute>-clsname    = ms_class-clsname.
-    <ls_attribute>-cmpname    = 'MF_ALL_DATA_RETRIEVED'.
-    <ls_attribute>-descript   = 'All data has been retrieved'.
+    <ls_attribute>-cmpname    = 'MF_ALL_DATA_RETRIEVED' ##NO_TEXT.
+    <ls_attribute>-descript   = 'All data has been retrieved'(010).
     <ls_attribute>-exposure   = seoc_exposure_private.
     <ls_attribute>-state      = seoc_state_implemented.
     <ls_attribute>-editorder  = 3.
     <ls_attribute>-attdecltyp = seoo_attdecltyp_statics.
-    <ls_attribute>-type       = 'ABAP_BOOL'.
+    <ls_attribute>-type       = 'ABAP_BOOL' ##NO_TEXT.
     <ls_attribute>-typtype    = 1.
 
 
@@ -291,21 +314,21 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
       AT FIRST.
         INSERT INITIAL LINE INTO TABLE mt_types ASSIGNING <ls_type>.
         <ls_type>-clsname   = ms_class-clsname.
-        <ls_type>-cmpname   = 'MTYP_RANGES'.
+        <ls_type>-cmpname   = 'MTYP_RANGES' ##NO_TEXT.
         <ls_type>-exposure  = seoc_exposure_private.
         <ls_type>-state     = seoc_state_implemented.
         <ls_type>-editorder = 1.
         <ls_type>-typtype = 4.
 
-        mac_add_type  'BEGIN OF mtyp_ranges,'.
+        mac_add_type  'BEGIN OF mtyp_ranges,' ##NO_TEXT.
       ENDAT.
 
       CONCATENATE <ls_fieldlist>-tabname <ls_fieldlist>-fieldname INTO ld_string2 SEPARATED BY '-'.
-      CONCATENATE <ls_fieldlist>-fieldname 'TYPE RANGE OF' ld_string2 ',' INTO ld_string SEPARATED BY space.
+      CONCATENATE <ls_fieldlist>-fieldname 'TYPE RANGE OF' ld_string2 ',' INTO ld_string SEPARATED BY space ##NO_TEXT..
       mac_add_type ld_string.
 
       AT LAST.
-        mac_add_type  '       END   OF mtyp_ranges'.
+        mac_add_type  '       END   OF mtyp_ranges' ##NO_TEXT..
       ENDAT.
     ENDLOOP.
   ENDMETHOD.
@@ -328,15 +351,15 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_method>-state      = seoc_state_implemented.
     <ls_method>-mtdnewexc  = abap_true.
     <ls_method>-mtddecltyp = '1'.
-    <ls_method_sources>-cpdname = <ls_method>-cmpname   = '_SELECT_ALL'.
-    <ls_method>-descript   = 'Selects all data from DB and stores in BUFFER'.
+    <ls_method_sources>-cpdname = <ls_method>-cmpname   = '_SELECT_ALL' ##NO_TEXT.
+    <ls_method>-descript   = 'Selects all data from DB and stores in BUFFER'(009).
     <ls_method>-exposure   = seoc_exposure_private.
 
     mac_add_source space.
-    CONCATENATE '  SELECT * FROM' md_dbname 'INTO TABLE mt_buffer.' INTO ld_string SEPARATED BY space.
+    CONCATENATE '  SELECT * FROM' md_dbname 'INTO TABLE mt_buffer ORDER BY PRIMARY KEY.' INTO ld_string SEPARATED BY space ##NO_TEXT.
     mac_add_source ld_string.
     mac_add_source space.
-    mac_add_source '  mf_all_data_retrieved = abap_true.'.
+    mac_add_source '  mf_all_data_retrieved = abap_true.' ##NO_TEXT.
     mac_add_source space.
 
   ENDMETHOD.
@@ -356,9 +379,9 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_method>-clsname    = ms_class-clsname.
     <ls_method>-state      = seoc_state_implemented.
     <ls_method>-mtdnewexc  = abap_true.
-    <ls_method>-mtddecltyp = '1'.
-    <ls_method_sources>-cpdname = <ls_method>-cmpname   = '_ADD_RANGE'.
-    <ls_method>-descript   = 'Add to Range'.
+    <ls_method>-mtddecltyp = '1'  ##NO_TEXT.
+    <ls_method_sources>-cpdname = <ls_method>-cmpname   = '_ADD_RANGE' ##NO_TEXT.
+    <ls_method>-descript   = 'Add to Range'(013).
     <ls_method>-exposure   = seoc_exposure_private.
 
 
@@ -366,39 +389,39 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_parameters ASSIGNING <ls_parameter>.
     <ls_parameter>-clsname    = <ls_method>-clsname.
     <ls_parameter>-cmpname    = <ls_method>-cmpname.
-    <ls_parameter>-sconame    = 'ID_LOW'.
+    <ls_parameter>-sconame    = 'ID_LOW' ##NO_TEXT.
     <ls_parameter>-cmptype    = seoo_cmptype_attribute.
     <ls_parameter>-mtdtype    = seoo_mtdtype_method.
     <ls_parameter>-editorder  = ld_order.
     <ls_parameter>-pardecltyp = seos_pardecltyp_importing.
     <ls_parameter>-parpasstyp = seos_parpasstyp_byreference.
     <ls_parameter>-typtype    = seoo_typtype_type.
-    <ls_parameter>-type       = 'ANY'.
+    <ls_parameter>-type       = 'ANY' ##NO_TEXT.
 
     ADD 1 TO ld_order.
     INSERT INITIAL LINE INTO TABLE mt_parameters ASSIGNING <ls_parameter>.
     <ls_parameter>-clsname    = <ls_method>-clsname.
     <ls_parameter>-cmpname    = <ls_method>-cmpname.
-    <ls_parameter>-sconame    = 'CT_RANGE'.
+    <ls_parameter>-sconame    = 'CT_RANGE'  ##NO_TEXT.
     <ls_parameter>-cmptype    = seoo_cmptype_attribute.
     <ls_parameter>-mtdtype    = seoo_mtdtype_method.
     <ls_parameter>-editorder  = ld_order.
     <ls_parameter>-pardecltyp = seos_pardecltyp_changing.
     <ls_parameter>-parpasstyp = seos_parpasstyp_byreference.
     <ls_parameter>-typtype    = seoo_typtype_type.
-    <ls_parameter>-type       = 'ANY TABLE'.
+    <ls_parameter>-type       = 'ANY TABLE'  ##NO_TEXT.
 
 
     mac_add_source space.
-    mac_add_source '  FIELD-SYMBOLS: <ls_row>    TYPE any,'.
-    mac_add_source '                 <ld_sign>   TYPE any,'.
-    mac_add_source '                 <ld_option> TYPE any,'.
-    mac_add_source '                 <ld_low>    TYPE any.'.
+    mac_add_source '  FIELD-SYMBOLS: <ls_row>    TYPE any,' ##NO_TEXT.
+    mac_add_source '                 <ld_sign>   TYPE any,' ##NO_TEXT.
+    mac_add_source '                 <ld_option> TYPE any,' ##NO_TEXT.
+    mac_add_source '                 <ld_low>    TYPE any.' ##NO_TEXT.
     mac_add_source space.
-    mac_add_source '  INSERT INITIAL LINE INTO TABLE ct_range ASSIGNING <ls_row>.'.
+    mac_add_source '  INSERT INITIAL LINE INTO TABLE ct_range ASSIGNING <ls_row>.' ##NO_TEXT.
     mac_add_source space.
     mac_add_source TEXT-001.
-    mac_add_source '    <ld_low> = id_low.'.
+    mac_add_source '    <ld_low> = id_low.' ##NO_TEXT.
     mac_add_source space.
     mac_add_source TEXT-002.
     mac_add_source TEXT-004.
@@ -425,40 +448,40 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_method>-clsname    = ms_class-clsname.
     <ls_method>-state      = seoc_state_implemented.
     <ls_method>-mtdnewexc  = abap_true.
-    <ls_method>-mtddecltyp = '1'.
-    <ls_method_sources>-cpdname = <ls_method>-cmpname   = 'GET_LIST'.
-    <ls_method>-descript   = 'Find Multiple details by keys'.
+    <ls_method>-mtddecltyp = '1'  ##NO_TEXT.
+    <ls_method_sources>-cpdname = <ls_method>-cmpname   = 'GET_LIST' ##NO_TEXT.
+    <ls_method>-descript   = 'Find Multiple details by keys'(014) ##NO_TEXT.
     <ls_method>-exposure   = seoc_exposure_public.
 
 
     mac_add_source space.
-    mac_add_source '  DATA: ls_buffer LIKE LINE OF mt_buffer.'.
+    mac_add_source '  DATA: ls_buffer LIKE LINE OF mt_buffer.' ##NO_TEXT.
     mac_add_source space.
-    mac_add_source '  FIELD-SYMBOLS: <ls_list> LIKE LINE OF et_list.'.
+    mac_add_source '  FIELD-SYMBOLS: <ls_list> LIKE LINE OF et_list.' ##NO_TEXT.
     mac_add_source space.
     mac_add_source space.
-    mac_add_source '  IF mf_all_data_retrieved = abap_false.'.
-    mac_add_source '    _SELECT_ALL( ).'.
-    mac_add_source '  ENDIF.'.
+    mac_add_source '  IF mf_all_data_retrieved = abap_false.' ##NO_TEXT.
+    mac_add_source '    _SELECT_ALL( ).' ##NO_TEXT.
+    mac_add_source '  ENDIF.' ##NO_TEXT.
     mac_add_source space.
-    mac_add_source '  CLEAR ms_ranges.'.
+    mac_add_source '  CLEAR ms_ranges.' ##NO_TEXT.
 
     LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist>.
-      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO ld_string.
+      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO ld_string ##NO_TEXT.
 
       mac_add_source space.
-      CONCATENATE '  IF' ld_string 'IS SUPPLIED.' INTO ld_string2 SEPARATED BY space.
+      CONCATENATE '  IF' ld_string 'IS SUPPLIED.' INTO ld_string2 SEPARATED BY space ##NO_TEXT.
       mac_add_source ld_string2.
-      CONCATENATE '    _add_range( EXPORTING id_low   =' ld_string INTO ld_string2 SEPARATED BY space.
+      CONCATENATE '    _add_range( EXPORTING id_low   =' ld_string INTO ld_string2 SEPARATED BY space ##NO_TEXT.
       mac_add_source ld_string2.
-      CONCATENATE '                CHANGING  ct_range = ms_ranges-' <ls_fieldlist>-fieldname ' ).' INTO ld_string2.
+      CONCATENATE '                CHANGING  ct_range = ms_ranges-' <ls_fieldlist>-fieldname ' ).' INTO ld_string2 ##NO_TEXT.
       mac_add_source ld_string2.
-      mac_add_source '  ENDIF.'.
+      mac_add_source '  ENDIF.' ##NO_TEXT.
     ENDLOOP.
 
     mac_add_source space.
     mac_add_source space.
-    mac_add_source '  LOOP AT mt_buffer INTO ls_buffer'.
+    mac_add_source '  LOOP AT mt_buffer INTO ls_buffer' ##NO_TEXT.
 
 * Only key fields
     LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist>.
@@ -468,7 +491,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
       <ls_parameter>-clsname    =  <ls_method>-clsname.
       <ls_parameter>-cmpname    =  <ls_method>-cmpname.
-      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO <ls_parameter>-sconame.
+      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO <ls_parameter>-sconame ##NO_TEXT.
       <ls_parameter>-descript   = <ls_fieldlist>-scrtext_m.
       <ls_parameter>-cmptype    = seoo_cmptype_attribute.
       <ls_parameter>-mtdtype    = seoo_mtdtype_method.
@@ -477,32 +500,34 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
       <ls_parameter>-parpasstyp = seos_parpasstyp_byreference.
       <ls_parameter>-typtype    = seoo_typtype_type.
       <ls_parameter>-paroptionl = abap_true.
-      CONCATENATE <ls_fieldlist>-tabname <ls_fieldlist>-fieldname INTO <ls_parameter>-type SEPARATED BY '-'.
+      CONCATENATE <ls_fieldlist>-tabname <ls_fieldlist>-fieldname INTO <ls_parameter>-type SEPARATED BY '-' ##NO_TEXT.
 
 *   Build WHERE clause
-      CONCATENATE  'ms_ranges-' <ls_fieldlist>-fieldname INTO ld_string.
+      CONCATENATE  'ms_ranges-' <ls_fieldlist>-fieldname INTO ld_string ##NO_TEXT.
       IF ld_order = 1.
-        CONCATENATE '  WHERE' <ls_fieldlist>-fieldname 'IN' ld_string INTO ld_string SEPARATED BY space.
+        CONCATENATE '  WHERE' <ls_fieldlist>-fieldname 'IN' ld_string INTO ld_string SEPARATED BY space ##NO_TEXT.
       ELSE.
-        CONCATENATE '    AND' <ls_fieldlist>-fieldname 'IN' ld_string INTO ld_string SEPARATED BY space.
+        CONCATENATE '    AND' <ls_fieldlist>-fieldname 'IN' ld_string INTO ld_string SEPARATED BY space ##NO_TEXT.
       ENDIF.
       mac_add_source ld_string.
 
     ENDLOOP.
 
-    CONCATENATE <ld_source> '.' INTO <ld_source>.
+    CONCATENATE <ld_source> '.' INTO <ld_source> ##NO_TEXT.
 
     mac_add_source space.
-    mac_add_source '  INSERT INITIAL LINE INTO TABLE et_list ASSIGNING <ls_list>.'.
-    mac_add_source '  MOVE-CORRESPONDING ls_buffer to <ls_list>.'.
+    mac_add_source '  INSERT INITIAL LINE INTO TABLE et_list ASSIGNING <ls_list>.' ##NO_TEXT.
+    mac_add_source '  MOVE-CORRESPONDING ls_buffer to <ls_list>.' ##NO_TEXT.
     mac_add_source space.
-    mac_add_source '  ENDLOOP.'.
+    mac_add_source '  ENDLOOP.' ##NO_TEXT.
 
 
     mac_add_source space.
-    mac_add_source '  IF et_list IS INITIAL.'.
-    mac_add_source '    RAISE EXCEPTION TYPE CX_NO_DATA_FOUND.'.
-    mac_add_source '  ENDIF.'.
+    mac_add_source '  IF et_list IS INITIAL.' ##NO_TEXT.
+    CONCATENATE '    RAISE EXCEPTION TYPE ' mc_exception_not_found '.' INTO ld_string RESPECTING BLANKS ##NO_TEXT.
+    mac_add_source ld_string.
+
+    mac_add_source '  ENDIF.' ##NO_TEXT.
 
 
 * Return parameters
@@ -510,8 +535,8 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_parameters ASSIGNING <ls_parameter>.
     <ls_parameter>-clsname    =  <ls_method>-clsname.
     <ls_parameter>-cmpname    =  <ls_method>-cmpname.
-    <ls_parameter>-sconame    = 'ET_LIST'.
-    <ls_parameter>-descript   = 'List Details'.
+    <ls_parameter>-sconame    = 'ET_LIST' ##NO_TEXT.
+    <ls_parameter>-descript   = 'List Details'(015).
     <ls_parameter>-cmptype    = seoo_cmptype_attribute.
     <ls_parameter>-mtdtype    = seoo_mtdtype_method.
     <ls_parameter>-editorder  = ld_order.
@@ -525,9 +550,9 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_exceptions ASSIGNING <ls_exception>.
     <ls_exception>-clsname  = <ls_method>-clsname.
     <ls_exception>-cmpname  = <ls_method>-cmpname.
-    <ls_exception>-sconame  = 'CX_NO_DATA_FOUND'.
+    <ls_exception>-sconame  = mc_exception_not_found ##NO_TEXT.
 *  <ls_exception>-version  = seoc_version_active.
-    <ls_exception>-descript = 'Not Found'.
+    <ls_exception>-descript = 'Not Found'(016).
   ENDMETHOD.
 
   METHOD _generate_method_get_detail.
@@ -547,24 +572,25 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_method>-clsname   = ms_class-clsname.
     <ls_method>-state     = seoc_state_implemented.
     <ls_method>-mtdnewexc = abap_true.
-    <ls_method>-mtddecltyp = '1'.
-    <ls_method_sources>-cpdname = <ls_method>-cmpname   = 'GET_DETAILS'.
-    <ls_method>-descript  = 'Find details by keys'.
+    <ls_method>-mtddecltyp = '1' ##NO_TEXT.
+    <ls_method_sources>-cpdname = <ls_method>-cmpname   = 'GET_DETAILS' ##NO_TEXT.
+    <ls_method>-descript  = 'Find details by keys'(017).
     <ls_method>-exposure  = seoc_exposure_public.
 
     mac_add_source space.
-    CONCATENATE '  DATA lt_list      TYPE' md_ttyp '.' INTO ld_string SEPARATED BY space.
+    CONCATENATE '  DATA lt_list      TYPE' md_ttyp '.' INTO ld_string SEPARATED BY space ##NO_TEXT.
     mac_add_source ld_string.
-    mac_add_source '  DATA ls_list      LIKE LINE OF lt_list.'.
-    mac_add_source '  DATA lo_exception TYPE REF TO CX_NO_DATA_FOUND.'.
+    mac_add_source '  DATA ls_list      LIKE LINE OF lt_list.' ##NO_TEXT.
+    CONCATENATE '  DATA lo_exception TYPE REF TO ' mc_exception_not_found '.' INTO ld_string SEPARATED BY space ##NO_TEXT.
+    mac_add_source ld_string.
 
 
     mac_add_source space.
-    mac_add_source '  READ TABLE mt_buffer INTO rs_result'.
-    mac_add_source '    WITH KEY'.
+    mac_add_source '  READ TABLE mt_buffer INTO rs_result' ##NO_TEXT.
+    mac_add_source '    WITH KEY' ##NO_TEXT.
     LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist> .
-      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO ld_string.
-      CONCATENATE  <ls_fieldlist>-fieldname '=' ld_string INTO ld_string SEPARATED BY space.
+      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO ld_string ##NO_TEXT.
+      CONCATENATE  <ls_fieldlist>-fieldname '=' ld_string INTO ld_string SEPARATED BY space ##NO_TEXT.
 
       AT FIRST.
         CONCATENATE <ld_source> ld_string INTO <ld_source> SEPARATED BY space.
@@ -579,14 +605,14 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
       mac_add_source ld_string.
 
     ENDLOOP.
-    CONCATENATE <ld_source> '.' INTO <ld_source>.
+    CONCATENATE <ld_source> '.' INTO <ld_source> ##NO_TEXT.
 
     mac_add_source space.
-    mac_add_source '  IF NOT sy-subrc IS INITIAL.'.
+    mac_add_source '  IF NOT sy-subrc IS INITIAL.' ##NO_TEXT.
 
     mac_add_source space.
-    mac_add_source '    TRY.'.
-    mac_add_source '        get_list( EXPORTING'.
+    mac_add_source '    TRY.' ##NO_TEXT.
+    mac_add_source '        get_list( EXPORTING' ##NO_TEXT.
 
 * Only key fields
     LOOP AT mt_fieldlist ASSIGNING <ls_fieldlist> .
@@ -596,7 +622,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
       <ls_parameter>-clsname    =  <ls_method>-clsname.
       <ls_parameter>-cmpname    =  <ls_method>-cmpname.
-      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO <ls_parameter>-sconame.
+      CONCATENATE 'ID_' <ls_fieldlist>-fieldname INTO <ls_parameter>-sconame ##NO_TEXT.
       <ls_parameter>-descript   = <ls_fieldlist>-scrtext_m.
       <ls_parameter>-cmptype    = seoo_cmptype_attribute.
       <ls_parameter>-mtdtype    = seoo_mtdtype_method.
@@ -604,9 +630,9 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
       <ls_parameter>-pardecltyp = seos_pardecltyp_importing.
       <ls_parameter>-parpasstyp = seos_parpasstyp_byreference.
       <ls_parameter>-typtype    = seoo_typtype_type.
-      CONCATENATE <ls_fieldlist>-tabname <ls_fieldlist>-fieldname INTO <ls_parameter>-type SEPARATED BY '-'.
+      CONCATENATE <ls_fieldlist>-tabname <ls_fieldlist>-fieldname INTO <ls_parameter>-type SEPARATED BY '-' ##NO_TEXT.
 
-      CONCATENATE <ls_parameter>-sconame '=' <ls_parameter>-sconame INTO ld_string SEPARATED BY space.
+      CONCATENATE <ls_parameter>-sconame '=' <ls_parameter>-sconame INTO ld_string SEPARATED BY space ##NO_TEXT.
 
       IF ld_order = 1.
         CONCATENATE <ld_source> space ld_string INTO <ld_source> SEPARATED BY space.
@@ -620,19 +646,21 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
-    mac_add_source '                  IMPORTING  et_list = lt_list ).'.
+    mac_add_source '                  IMPORTING  et_list = lt_list ).' ##NO_TEXT.
 
     mac_add_source space.
-    mac_add_source '      READ TABLE lt_list INDEX 1 INTO ls_list.'.
-    mac_add_source '      MOVE-CORRESPONDING ls_list TO rs_result.'.
+    mac_add_source '      READ TABLE lt_list INDEX 1 INTO ls_list.' ##NO_TEXT.
+    mac_add_source '      MOVE-CORRESPONDING ls_list TO rs_result.' ##NO_TEXT.
 
     mac_add_source space.
-    mac_add_source '      CATCH CX_NO_DATA_FOUND INTO lo_exception.'.
-    mac_add_source '        RAISE EXCEPTION lo_exception.'.
-    mac_add_source '    ENDTRY.'.
+    CONCATENATE '      CATCH ' mc_exception_not_found ' INTO lo_exception .' INTO ld_string RESPECTING BLANKS ##NO_TEXT.
+    mac_add_source ld_string.
+
+    mac_add_source '        RAISE EXCEPTION lo_exception.' ##NO_TEXT.
+    mac_add_source '    ENDTRY.' ##NO_TEXT.
 
     mac_add_source space.
-    mac_add_source '  ENDIF.'.
+    mac_add_source '  ENDIF.' ##NO_TEXT.
 
 
 * Add return parameter
@@ -640,8 +668,8 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_parameters ASSIGNING <ls_parameter>.
     <ls_parameter>-clsname   =  <ls_method>-clsname.
     <ls_parameter>-cmpname   =  <ls_method>-cmpname.
-    <ls_parameter>-sconame   = 'RS_RESULT'.
-    <ls_parameter>-descript  = 'Details'.
+    <ls_parameter>-sconame   = 'RS_RESULT' ##NO_TEXT.
+    <ls_parameter>-descript  = 'Details'(018).
     <ls_parameter>-cmptype   = seoo_cmptype_attribute.
     <ls_parameter>-mtdtype   = seoo_mtdtype_method.
     <ls_parameter>-editorder = ld_order.
@@ -654,9 +682,9 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     INSERT INITIAL LINE INTO TABLE mt_exceptions ASSIGNING <ls_exception>.
     <ls_exception>-clsname  = <ls_method>-clsname.
     <ls_exception>-cmpname  = <ls_method>-cmpname.
-    <ls_exception>-sconame  = 'CX_NO_DATA_FOUND'.
+    <ls_exception>-sconame  = mc_exception_not_found.
 *  <ls_exception>-version  = seoc_version_active.
-    <ls_exception>-descript = 'Not data found'.
+    <ls_exception>-descript = 'Not data found'(019).
   ENDMETHOD.
 
   METHOD _generate_method_init_buffer.
@@ -675,13 +703,13 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     <ls_method>-clsname   = ms_class-clsname.
     <ls_method>-state     = seoc_state_implemented.
     <ls_method>-mtdnewexc = abap_true.
-    <ls_method>-mtddecltyp = '1'.
-    <ls_method_sources>-cpdname = <ls_method>-cmpname   = 'INIT_BUFFER'.
-    <ls_method>-descript  = 'Initializes Buffer Data'.
+    <ls_method>-mtddecltyp = '1' ##NO_TEXT.
+    <ls_method_sources>-cpdname = <ls_method>-cmpname   = 'INIT_BUFFER' ##NO_TEXT.
+    <ls_method>-descript  = 'Initializes Buffer Data'(021).
     <ls_method>-exposure  = seoc_exposure_public.
 
-    mac_add_source '  CLEAR mt_buffer[].'.
-    mac_add_source '  mf_all_data_retrieved = abap_false.'.
+    mac_add_source '  CLEAR mt_buffer[].' ##NO_TEXT.
+    mac_add_source '  mf_all_data_retrieved = abap_false.' ##NO_TEXT.
   ENDMETHOD.
 
   METHOD _generate_class.
@@ -720,7 +748,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     ld_obj_name = ms_class-clsname.
     CALL FUNCTION 'RS_INSERT_INTO_WORKING_AREA'
       EXPORTING
-        object   = 'CPUB'
+        object   = mc_class_section-public
         obj_name = ld_obj_name
       EXCEPTIONS
         OTHERS   = 999.
@@ -728,7 +756,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     CALL FUNCTION 'RS_INSERT_INTO_WORKING_AREA'
       EXPORTING
-        object   = 'CPRO'
+        object   = mc_class_section-protected
         obj_name = ld_obj_name
       EXCEPTIONS
         OTHERS   = 999.
@@ -736,7 +764,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     CALL FUNCTION 'RS_INSERT_INTO_WORKING_AREA'
       EXPORTING
-        object   = 'CPRI'
+        object   = mc_class_section-private
         obj_name = ld_obj_name
       EXCEPTIONS
         OTHERS   = 999.
@@ -745,14 +773,14 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
         author          = sy-uname
-        global_lock     = 'X'
+        global_lock     = abap_true
         object          = ld_obj_name
-        object_class    = 'CLASS'
+        object_class    = mc_class_section-all_class
         devclass        = md_devclass
         korrnum         = md_korrnum
         master_language = sy-langu
 *       PROGRAM         = PROGRAM_LOCAL
-        mode            = 'INSERT'
+        mode            = mc_insert
       IMPORTING
 *       AUTHOR          = UNAME
         korrnum         = ed_korrnum
@@ -762,7 +790,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
     mac_error.
 
     ed_classname = ms_class-clsname.
-    SET PARAMETER ID 'CLASS' FIELD ed_classname.
+    SET PARAMETER ID mc_class_section-all_class FIELD ed_classname.
 
 
   ENDMETHOD.

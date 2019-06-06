@@ -14,7 +14,7 @@
                WITH    sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
                RAISING error.
      ELSE.
-       MESSAGE 'Unexpected error' TYPE 'E' RAISING error.
+       MESSAGE 'Unexpected error' TYPE 'E' RAISING error ##NO_TEXT.
      ENDIF.
    ENDIF.
  END-OF-DEFINITION.
