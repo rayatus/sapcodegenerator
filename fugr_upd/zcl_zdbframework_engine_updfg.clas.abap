@@ -165,6 +165,12 @@ CLASS zcl_zdbframework_engine_updfg DEFINITION
 
     METHODS _replace_template
       RAISING zcx_zdbframework_engine.
+    METHODS _replace_function
+      IMPORTING
+        id_templ_funcname      TYPE rs38l_fnam
+        id_new_funcname        TYPE rs38l_fnam
+      CHANGING
+        cs_function_group_data TYPE zcl_zdbframework_engine_updfg=>mtyp_s_function_group_data.
 
 
 ENDCLASS.
@@ -592,15 +598,14 @@ CLASS zcl_zdbframework_engine_updfg IMPLEMENTATION.
 
   METHOD _replace_template.
 
-    DATA: ld_search  TYPE string,
-          ld_replace TYPE string.
+    DATA: ld_search       TYPE string,
+          ld_replace      TYPE string,
+          ld_old_progname TYPE string.
 
     FIELD-SYMBOLS: <ls_source>        LIKE LINE OF ms_new_function_group-source,
-                   <ls_method>        LIKE LINE OF ms_new_function_group-methods,
                    <ls_parameter>     LIKE LINE OF ms_new_function_group-parameters,
                    <ls_method_source> LIKE LINE OF ms_new_function_group-methods_source,
                    <ld_source_code>   LIKE LINE OF <ls_source>-source,
-                   <ls_poolcontent>   LIKE LINE OF ms_new_function_group-poolcontents,
                    <ls_include>       LIKE LINE OF ms_new_function_group-includes.
 
     ms_new_function_group                 = ms_templ_function_group.
@@ -610,8 +615,10 @@ CLASS zcl_zdbframework_engine_updfg IMPLEMENTATION.
     LOOP AT ms_new_function_group-source ASSIGNING <ls_source>.
 
       "Replace function group name
-      ld_search  = ms_templ_function_group-header-funcname.
-      ld_replace = ms_new_function_group-header-funcname.
+      ld_search             = ms_templ_function_group-header-funcname.
+      ld_replace            = ms_new_function_group-header-funcname.
+      ld_old_progname       = <ls_source>-progname.
+
 
       REPLACE ld_search
         WITH ld_replace
@@ -620,7 +627,7 @@ CLASS zcl_zdbframework_engine_updfg IMPLEMENTATION.
 
       CONDENSE <ls_source>-progname NO-GAPS.
 
-      "Replace TOP include
+      "Replace include source code
       LOOP AT <ls_source>-source ASSIGNING <ld_source_code>.
         TRANSLATE <ld_source_code> TO UPPER CASE.
 
@@ -641,125 +648,23 @@ CLASS zcl_zdbframework_engine_updfg IMPLEMENTATION.
 
       ENDLOOP.
 
-    ENDLOOP.
+      "Replace include names
+      LOOP AT ms_new_function_group-includes ASSIGNING <ls_include> WHERE name = ld_old_progname.
 
-
-    "Replace include names
-    LOOP AT ms_new_function_group-includes ASSIGNING <ls_include>.
-
-
-      ld_search  = mc_templ_name.
-      ld_replace = md_dbname.
-
-      REPLACE ld_search WITH ld_replace INTO <ls_include>-name.
-      CONDENSE <ls_include>-name NO-GAPS.
-
-    ENDLOOP.
-    "-------------------------------------------------------------------------------------
-    "Replace function S name
-    READ TABLE ms_new_function_group-poolcontents
-      WITH KEY funcname = mc_templ_function_s
-      ASSIGNING <ls_poolcontent>.
-
-    ld_search  = mc_templ_function_s.
-    ld_replace = md_function_s.
-
-    REPLACE ld_search WITH ld_replace INTO <ls_poolcontent>-funcname.
-    CONDENSE <ls_poolcontent>-funcname NO-GAPS.
-
-    "Replace includes
-    ld_search  = mc_templ_fugr.
-    ld_replace = md_function_group.
-    REPLACE ld_search WITH ld_replace INTO <ls_poolcontent>-include.
-    CONDENSE <ls_poolcontent>-include NO-GAPS.
-    "-------------------------------------------------------------------------------------
-    "Replace function T name
-    READ TABLE ms_new_function_group-poolcontents
-      WITH KEY funcname = mc_templ_function_t
-      ASSIGNING <ls_poolcontent>.
-
-    ld_search  = mc_templ_function_t.
-    ld_replace = md_function_t.
-
-    REPLACE ld_search WITH ld_replace INTO <ls_poolcontent>-funcname.
-    CONDENSE <ls_poolcontent>-funcname NO-GAPS.
-
-    "Replace includes
-    ld_search  = mc_templ_fugr.
-    ld_replace = md_function_group.
-    REPLACE ld_search WITH ld_replace INTO <ls_poolcontent>-include.
-    CONDENSE <ls_poolcontent>-include NO-GAPS.
-    "----------------------------------------------------------------------------------------
-
-    LOOP AT ms_new_function_group-methods ASSIGNING <ls_method>.
-      "Replace function names
-      ld_search  = mc_templ_dbname.
-      ld_replace = md_dbname.
-
-      REPLACE ld_search WITH ld_replace INTO <ls_method>-funcname.
-      CONDENSE <ls_method>-funcname NO-GAPS.
-
-      "Replace function include
-      ld_search  = mc_templ_name.
-      ld_replace = md_dbname.
-
-      REPLACE ld_search WITH ld_replace INTO <ls_method>-pname.
-      CONDENSE <ls_method>-pname NO-GAPS.
-
-      "Replace function description
-      ld_search  = mc_templ_dbname.
-      ld_replace = md_dbname.
-      REPLACE ld_search WITH ld_replace INTO <ls_method>-stext.
-      CONDENSE <ls_method>-stext.
-
-    ENDLOOP.
-
-    "Function parameter
-    LOOP AT ms_new_function_group-parameters ASSIGNING <ls_parameter>.
-      "Replace function name
-      ld_search  = mc_templ_dbname.
-      ld_replace = md_dbname.
-      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-funcname.
-      CONDENSE <ls_parameter>-funcname NO-GAPS.
-
-      "Replace parameter name
-      ld_search  = mc_templ_dbname.
-      ld_replace = md_dbname.
-      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-parameter.
-      CONDENSE <ls_parameter>-parameter NO-GAPS.
-
-      "Replace parameter structure table type
-      ld_search  = mc_templ_ttype.
-      ld_replace = md_tabletype_name.
-      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-structure.
-      CONDENSE <ls_parameter>-structure NO-GAPS.
-
-      "Replace parameter structure
-      ld_search  = mc_templ_dbname.
-      ld_replace = md_dbname.
-      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-structure.
-      CONDENSE <ls_parameter>-structure NO-GAPS.
-    ENDLOOP.
-
-    "Function source
-    LOOP AT ms_new_function_group-methods_source ASSIGNING <ls_method_source>.
-
-*     "Replace function name
-      ld_search  = mc_templ_dbname.
-      ld_replace = md_dbname.
-      REPLACE ld_search WITH ld_replace INTO <ls_method_source>-progname.
-      CONDENSE <ls_method_source>-progname.
-
-      LOOP AT <ls_method_source>-source ASSIGNING <ld_source_code>.
-        TRANSLATE <ld_source_code> TO UPPER CASE.
-        "Replace parameter name
-        ld_search  = mc_templ_dbname.
-        ld_replace = md_dbname.
-        REPLACE ld_search WITH ld_replace INTO <ld_source_code>.
+        <ls_include>-name = <ls_source>-progname.
 
       ENDLOOP.
 
     ENDLOOP.
+
+    _replace_function( EXPORTING id_templ_funcname = mc_templ_function_s
+                                 id_new_funcname   = md_function_s
+                       CHANGING  cs_function_group_data = ms_new_function_group ).
+
+    _replace_function( EXPORTING id_templ_funcname = mc_templ_function_t
+                                 id_new_funcname   = md_function_t
+                       CHANGING  cs_function_group_data = ms_new_function_group ).
+
 
   ENDMETHOD.
 
@@ -769,8 +674,6 @@ CLASS zcl_zdbframework_engine_updfg IMPLEMENTATION.
     DATA ld_search       TYPE string.
     DATA lt_dbname_parts TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
     DATA ld_lines        TYPE i.
-    DATA ld_underscore   TYPE c LENGTH 1.
-
     ed_function_group = mc_templ_fugr.
     ed_function_s     = mc_templ_function_s.
     ed_function_t     = mc_templ_function_t.
@@ -821,6 +724,95 @@ CLASS zcl_zdbframework_engine_updfg IMPLEMENTATION.
     REPLACE ld_search WITH ld_replace INTO ed_ttyp.
     CONDENSE ed_ttyp NO-GAPS.
 
+
+  ENDMETHOD.
+
+
+
+  METHOD _replace_function.
+
+    DATA: ld_search  TYPE string,
+          ld_replace TYPE string,
+          ld_length  TYPE i,
+          ld_suffix  TYPE string.
+
+    FIELD-SYMBOLS: <ls_poolcontent>   LIKE LINE OF ms_new_function_group-poolcontents,
+                   <ls_method>        LIKE LINE OF ms_new_function_group-methods,
+                   <ls_parameter>     LIKE LINE OF ms_new_function_group-parameters,
+                   <ls_method_source> LIKE LINE OF ms_new_function_group-methods_source,
+                   <ld_source_code>   type line of rsfb_source.
+
+    "Replace function name
+    READ TABLE ms_new_function_group-poolcontents
+         WITH KEY funcname = id_templ_funcname
+         ASSIGNING <ls_poolcontent>.
+    <ls_poolcontent>-funcname = id_new_funcname.
+
+    "Replace include name
+    ld_length = strlen( <ls_poolcontent>-include ).
+    ld_length = ld_length - 3.
+    ld_suffix = <ls_poolcontent>-include+ld_length(3).
+    CONCATENATE 'L' md_function_group ld_suffix INTO <ls_poolcontent>-include.
+    CONDENSE <ls_poolcontent>-include NO-GAPS.
+
+
+
+    LOOP AT ms_new_function_group-methods ASSIGNING <ls_method>
+                                          WHERE funcname = id_templ_funcname.
+      "Replace function names
+      <ls_method>-funcname = id_new_funcname.
+      "Replace main program name
+      CONCATENATE 'SAPL' md_function_group INTO <ls_method>-pname.
+      "Replace function description
+      ld_search  = mc_templ_dbname.
+      ld_replace = md_dbname.
+      REPLACE ld_search WITH ld_replace INTO <ls_method>-stext.
+      CONDENSE <ls_method>-stext.
+
+    ENDLOOP.
+
+    "Function parameter
+    LOOP AT ms_new_function_group-parameters ASSIGNING <ls_parameter>
+                                             WHERE funcname = id_templ_funcname.
+      "Replace function name
+      <ls_parameter>-funcname = id_new_funcname.
+
+      "Replace parameter name
+      ld_search  = mc_templ_dbname.
+      ld_replace = md_dbname.
+      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-parameter.
+      CONDENSE <ls_parameter>-parameter NO-GAPS.
+
+      "Replace parameter structure table type
+      ld_search  = mc_templ_ttype.
+      ld_replace = md_tabletype_name.
+      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-structure.
+      CONDENSE <ls_parameter>-structure NO-GAPS.
+
+      "Replace parameter structure
+      ld_search  = mc_templ_dbname.
+      ld_replace = md_dbname.
+      REPLACE ld_search WITH ld_replace INTO <ls_parameter>-structure.
+      CONDENSE <ls_parameter>-structure NO-GAPS.
+    ENDLOOP.
+
+    "Function source
+    LOOP AT ms_new_function_group-methods_source ASSIGNING <ls_method_source>
+                                                 where progname = id_templ_funcname.
+
+*     "Replace function name
+      <ls_method_source>-progname = id_new_funcname.
+
+      LOOP AT <ls_method_source>-source ASSIGNING <ld_source_code>.
+        TRANSLATE <ld_source_code> TO UPPER CASE.
+        "Replace parameter name
+        ld_search  = mc_templ_dbname.
+        ld_replace = md_dbname.
+        REPLACE ld_search WITH ld_replace INTO <ld_source_code>.
+
+      ENDLOOP.
+
+    ENDLOOP.
 
   ENDMETHOD.
 

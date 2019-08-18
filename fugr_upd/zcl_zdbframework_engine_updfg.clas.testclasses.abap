@@ -11,61 +11,68 @@ ENDCLASS.
 CLASS ltcl_zdbframework_engine_updfg IMPLEMENTATION.
 
   METHOD first_test.
-    TRY.
 
+    DATA ld_new_fugr            TYPE rs38l_area   VALUE 'Z_FG_ZTESTUPD_UPD'.
+    DATA ld_dbname              TYPE tabname16    VALUE 'ZTESTUPD'.
+    DATA ld_new_devclass        TYPE devclass     VALUE '$TMP'.
+    DATA ld_new_function_single TYPE rs38l_fnam   VALUE 'Z_FM_ZTESTUPD_UPD_S'.
+    DATA ld_new_function_table  TYPE rs38l_fnam   VALUE 'Z_FM_ZTESTUPD_UPD_T'.
+    DATA ld_db_table_type_upd   TYPE typename     VALUE 'ZTT_ZTESTUPD_KZ'.
+
+    TRY.
         CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
           EXPORTING
-            function_pool = 'ZFG_ZTESTUPD_UPD'
+            function_pool = ld_new_fugr
           EXCEPTIONS
             OTHERS        = 999.
         IF sy-subrc IS INITIAL.
           CALL FUNCTION 'RS_FUNCTION_POOL_DELETE'
             EXPORTING
-              area            = 'ZFG_ZTESTUPD_UPD'
+              area            = ld_new_fugr
               suppress_popups = abap_true
             EXCEPTIONS
               OTHERS          = 999.
           IF sy-subrc <> 0.
-            cl_abap_unit_assert=>fail( 'Unable to delete already existing resulting FUGR' ).
+            cl_abap_unit_assert=>fail( |Unable to delete already existing function group { ld_new_fugr }| ).
           ENDIF.
         ENDIF.
 
         zcl_zdbframework_engine_updfg=>generate_upd_function_group(
           EXPORTING
-            id_devclass             = '$TMP'
-            id_dbname               = 'ZTESTUPD'
-            id_function_group       = 'ZFG_ZTESTUPD_UPD'
-            id_function_s           = 'Z_FM_ZTESTUPD_UPD_S'
-            id_function_t           = 'Z_FM_ZTESTUPD_UPD_T'
-            id_ttyp                 = 'ZTT_ZTESTUPD_KZ'
+            id_devclass             = ld_new_devclass
+            id_dbname               = ld_dbname
+            id_function_group       = ld_new_fugr
+            id_function_s           = ld_new_function_single
+            id_function_t           = ld_new_function_table
+            id_ttyp                 = ld_db_table_type_upd
         ).
 
 
         CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
           EXPORTING
-            function_pool = 'ZFG_ZTESTUPD_UPD'
+            function_pool = ld_new_fugr
           EXCEPTIONS
             OTHERS        = 999.
         IF sy-subrc <> 0.
-          cl_abap_unit_assert=>fail( 'Resulting FunctionGroup does not exist.' ).
+          cl_abap_unit_assert=>fail( |Resulting FunctionGroup { ld_new_fugr } does not exist.| ).
         ENDIF.
 
         CALL FUNCTION 'FUNCTION_EXISTS'
           EXPORTING
-            funcname = 'Z_FM_ZTESTUPD_UPD_S'
+            funcname = ld_new_function_single
           EXCEPTIONS
             OTHERS   = 999.
         IF sy-subrc <> 0.
-          cl_abap_unit_assert=>fail( 'Function Z_FM_ZTESTUPD_UPD_S does not exists' ).
+          cl_abap_unit_assert=>fail( |Function { ld_new_function_single } does not exists| ).
         ENDIF.
 
         CALL FUNCTION 'FUNCTION_EXISTS'
           EXPORTING
-            funcname = 'Z_FM_ZTESTUPD_UPD_T'
+            funcname = ld_new_function_table
           EXCEPTIONS
             OTHERS   = 999.
         IF sy-subrc <> 0.
-          cl_abap_unit_assert=>fail( 'Function Z_FM_ZTESTUPD_UPD_T does not exists' ).
+          cl_abap_unit_assert=>fail( |Function { ld_new_function_table } does not exists| ).
         ENDIF.
 
       CATCH zcx_zdbframework_engine INTO DATA(lo_exception).    " .
