@@ -25,7 +25,8 @@
 "! <p class="shorttext synchronized" lang="en">Creates a READ ABAP class</p>
 CLASS zcl_zdbframework_engine_read DEFINITION
   PUBLIC
-  CREATE PROTECTED .
+  CREATE PROTECTED
+  INHERITING FROM zcl_zdbframework_engine_base.
 
   PUBLIC SECTION.
     "! <p class="shorttext synchronized" lang="en">Generates an ABAP READ</p>
@@ -50,15 +51,7 @@ CLASS zcl_zdbframework_engine_read DEFINITION
                  VALUE(ed_korrnum)   TYPE trkorr
       EXCEPTIONS dbname_not_permited
                  error.
-    "! <p class="shorttext synchronized" lang="en">Verifies if DB Table is permitted</p>
-    "! <br/>
-    "! Only tablenames in <em>customer namespace</em> are allowed.
-    "!
-    "! @parameter id_dbname | <p class="shorttext synchronized" lang="en">DB tabname</p>
-    "! @exception dbname_not_permited | <p class="shorttext synchronized" lang="en">Table name is not permited</p>
-    CLASS-METHODS chk_is_dbname_permitted
-      IMPORTING  id_dbname TYPE tabname16
-      EXCEPTIONS dbname_not_permited.
+
     "! <p class="shorttext synchronized" lang="en">Gets ABAP Class prefix</p>
     "! Retrieves the prefix for ABAP class name
     "!
@@ -70,6 +63,7 @@ CLASS zcl_zdbframework_engine_read DEFINITION
     "! @parameter rd_suffix | <p class="shorttext synchronized" lang="en">Suffix</p>
     CLASS-METHODS get_class_suffix
       RETURNING VALUE(rd_suffix) TYPE string.
+
   PROTECTED SECTION.
 
     TYPE-POOLS:
@@ -163,11 +157,6 @@ CLASS zcl_zdbframework_engine_read DEFINITION
 
 
   PRIVATE SECTION.
-
-    CONSTANTS: BEGIN OF mc_msgtyp,
-                 error TYPE string VALUE 'E' ##NO_TEXT,
-               END OF mc_msgtyp.
-
     CONSTANTS: BEGIN OF mc_fieldname,
                  mandant TYPE string VALUE 'MANDT' ##NO_TEXT,
                  client  TYPE string VALUE 'CLNT' ##NO_TEXT,
@@ -184,10 +173,6 @@ CLASS zcl_zdbframework_engine_read DEFINITION
     CONSTANTS mc_class_prefix TYPE string VALUE 'ZCL_' ##NO_TEXT.
     CONSTANTS mc_class_suffix TYPE string VALUE '_READ' ##NO_TEXT.
     CONSTANTS mc_insert TYPE c LENGTH 6 VALUE 'INSERT' ##NO_TEXT.
-    CONSTANTS mc_procuder_namespace TYPE string VALUE 'P' ##NO_TEXT.
-    CONSTANTS mc_custom_namespace_z TYPE string VALUE 'Z' ##NO_TEXT.
-    CONSTANTS mc_custom_namespace_y TYPE string VALUE 'Y' ##NO_TEXT.
-    CONSTANTS mc_custom_namespace_t TYPE string VALUE 'T' ##NO_TEXT.
     CONSTANTS mc_customizing_table TYPE string VALUE 'C' ##NO_TEXT.
     CONSTANTS mc_active_version TYPE string VALUE 'A' ##NO_TEXT.
 
@@ -205,8 +190,15 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     DATA: lo_engine TYPE REF TO zcl_zdbframework_engine_read.
 
-    chk_is_dbname_permitted( EXPORTING id_dbname = id_dbname
-                             EXCEPTIONS OTHERS = 999 ).
+    CREATE OBJECT lo_engine
+      EXPORTING
+        id_devclass  = id_devclass
+        id_dbname    = id_dbname
+        id_classname = id_classname
+        id_ttyp      = id_ttyp.
+
+    lo_engine->chk_is_dbname_permitted( EXPORTING  id_dbname = id_dbname
+                                        EXCEPTIONS OTHERS    = 999 ).
     IF sy-subrc IS NOT INITIAL.
       MESSAGE ID      sy-msgid
               TYPE    sy-msgty
@@ -214,13 +206,6 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
               WITH    sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
               RAISING dbname_not_permited .
     ENDIF.
-
-    CREATE OBJECT lo_engine
-      EXPORTING
-        id_devclass  = id_devclass
-        id_dbname    = id_dbname
-        id_classname = id_classname
-        id_ttyp      = id_ttyp.
 
     lo_engine->_get_fieldlist( ).
 
@@ -239,7 +224,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
     lo_engine->_generate_class( IMPORTING ed_classname = ed_classname
                                           ed_korrnum   = ed_korrnum
-                                EXCEPTIONS OTHERS       = 999 ).
+                                EXCEPTIONS OTHERS      = 999 ).
     IF sy-subrc IS NOT INITIAL.
       MESSAGE ID      sy-msgid
               TYPE    sy-msgty
@@ -250,37 +235,7 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD chk_is_dbname_permitted.
-    DATA lt_allowed_namespaces TYPE STANDARD TABLE OF trnspace-namespace.
-    DATA lf_is_allowed TYPE abap_bool VALUE abap_false.
-    DATA long TYPE i.
 
-    FIELD-SYMBOLS <ls_allowed_namespace> LIKE LINE OF lt_allowed_namespaces.
-
-    "Search for producer namespaces.
-    SELECT namespace
-      FROM trnspace
-      INTO TABLE lt_allowed_namespaces
-      WHERE role = mc_procuder_namespace.
-
-    INSERT INITIAL LINE INTO TABLE lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
-    <ls_allowed_namespace> = mc_custom_namespace_z.
-    INSERT INITIAL LINE INTO TABLE lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
-    <ls_allowed_namespace> = mc_custom_namespace_y.
-    INSERT INITIAL LINE INTO TABLE lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
-    <ls_allowed_namespace> = mc_custom_namespace_t.
-
-    LOOP AT lt_allowed_namespaces ASSIGNING <ls_allowed_namespace>.
-      long = strlen( <ls_allowed_namespace> ).
-      IF id_dbname+0(long) = <ls_allowed_namespace>.
-        lf_is_allowed = abap_true.
-      ENDIF.
-    ENDLOOP.
-
-    IF lf_is_allowed = abap_false AND sy-sysid <> 'NPL'.
-      MESSAGE 'Only tables in an allowed namespace are permitted.'(020) TYPE mc_msgtyp-error RAISING dbname_not_permited.
-    ENDIF.
-  ENDMETHOD.
 
   METHOD get_class_prefix.
     rd_prefix = mc_class_prefix.
@@ -290,6 +245,8 @@ CLASS zcl_zdbframework_engine_read IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
+    super->constructor( ).
+
     me->md_dbname         = id_dbname.
     me->ms_class-clsname  = id_classname.
     me->md_devclass       = id_devclass.

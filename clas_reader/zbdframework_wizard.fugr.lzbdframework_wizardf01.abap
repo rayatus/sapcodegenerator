@@ -51,19 +51,18 @@ ENDFORM.                    " CHK_0200_DATA
 *      -->P_TYPEDATA  text
 *----------------------------------------------------------------------*
 FORM chk_tabname  USING    p_name.
+  DATA: lo_engine_base TYPE REF TO zcl_zdbframework_engine_base.
 
-
-  SELECT COUNT( * ) INTO sy-dbcnt FROM dd02l
-    WHERE tabname = p_name
-      AND as4local = 'A'.
-  IF sy-dbcnt IS INITIAL.
-    MESSAGE e007(e2) WITH p_name.
-*   & does not exist. Check name
-  ENDIF.
+  CREATE OBJECT lo_engine_base.
+  "DB Table exists?
+  lo_engine_base->chk_exist_dbname( EXPORTING  id_dbname = p_name
+                                    EXCEPTIONS OTHERS    = 999 ).
 
   "Is allowed to create a READ class for this table?
-  zcl_zdbframework_engine_read=>chk_is_dbname_permitted( EXPORTING id_dbname = p_name
-                                                         EXCEPTIONS OTHERS = 999 ).
+  IF sy-subrc IS INITIAL.
+    lo_engine_base->chk_is_dbname_permitted( EXPORTING  id_dbname = p_name
+                                             EXCEPTIONS OTHERS    = 999 ).
+  ENDIF.
   IF NOT sy-subrc IS INITIAL.
     MESSAGE ID      sy-msgid
             TYPE    sy-msgty
@@ -80,13 +79,18 @@ ENDFORM.                    " CHK_TYPEDATA
 *----------------------------------------------------------------------*
 FORM chk_typedata  USING    p_name.
 
-  SELECT COUNT( * ) INTO sy-dbcnt FROM dd40l
-    WHERE typename = p_name
-      AND as4local = 'A'.
-  IF sy-dbcnt IS INITIAL.
-    MESSAGE e007(e2) WITH p_name.
-*   & does not exist. Check name
+  DATA: lo_engine_base TYPE REF TO zcl_zdbframework_engine_base.
+
+  CREATE OBJECT lo_engine_base.
+  lo_engine_base->chk_exists_typedata( EXPORTING  id_typedata = p_name
+                                       EXCEPTIONS OTHERS      = 999 ).
+  IF NOT sy-subrc IS INITIAL.
+    MESSAGE ID      sy-msgid
+            TYPE    sy-msgty
+            NUMBER  sy-msgno
+            WITH    sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
   ENDIF.
+
 ENDFORM.                    " CHK_TYPEDATA
 *&---------------------------------------------------------------------*
 *&      Form  SET_CLSNAME_INIT_VALUE

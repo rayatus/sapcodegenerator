@@ -10,12 +10,12 @@
    </INCLUDES>
    <FUNCTIONS>
     <item>
-     <FUNCNAME>ZFM_SFLIGHT_UPDATE_S</FUNCNAME>
+     <FUNCNAME>Z_FM_SFLIGHT_UPD_S</FUNCNAME>
      <UPDATE_TASK>3</UPDATE_TASK>
      <SHORT_TEXT>SFLIGHT - Update Function - Single</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
-       <PARAMETER>IS_SFLIGHT</PARAMETER>
+       <PARAMETER>IS_DATA</PARAMETER>
        <TYP>SFLIGHT</TYP>
       </RSIMP>
       <RSIMP>
@@ -33,9 +33,8 @@
      </EXCEPTION>
      <DOCUMENTATION>
       <RSFDO>
-       <PARAMETER>IS_SFLIGHT</PARAMETER>
+       <PARAMETER>IS_DATA</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>Flight</STEXT>
        <INDEX> 001</INDEX>
       </RSFDO>
       <RSFDO>
@@ -59,12 +58,12 @@
      </DOCUMENTATION>
     </item>
     <item>
-     <FUNCNAME>ZFM_SFLIGHT_UPDATE_T</FUNCNAME>
+     <FUNCNAME>Z_FM_SFLIGHT_UPD_T</FUNCNAME>
      <UPDATE_TASK>3</UPDATE_TASK>
      <SHORT_TEXT>SFLIGHT - Update Function Module - Massive</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
-       <PARAMETER>IT_SFLIGHT</PARAMETER>
+       <PARAMETER>IT_DATA</PARAMETER>
        <TYP>ZTT_SFLIGHT_KZ</TYP>
       </RSIMP>
      </IMPORT>
@@ -78,9 +77,8 @@
      </EXCEPTION>
      <DOCUMENTATION>
       <RSFDO>
-       <PARAMETER>IT_SFLIGHT</PARAMETER>
+       <PARAMETER>IT_DATA</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>SFLIGHT - Update Table</STEXT>
        <INDEX> 001</INDEX>
       </RSFDO>
       <RSFDO>

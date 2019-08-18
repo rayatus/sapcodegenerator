@@ -1,4 +1,4 @@
-FUNCTION-POOL ZFG_TEMPLATE_UPDATE.          "MESSAGE-ID ..
+FUNCTION-POOL zfg_template_update.          "MESSAGE-ID ..
 
 *====================================================================
 CONSTANTS:
